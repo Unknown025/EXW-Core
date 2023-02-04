@@ -65,8 +65,6 @@ public class ASMEntityRenderer implements org.rainyville.exw.core.api.IPatcher {
             }
         }
 
-        EXWLoadingPlugin.LOGGER.info("Patch status - orientCamera: {}, updateRenderer: {}", patchedOrientCamera, patchedUpdateRenderer);
-
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
         classNode.accept(writer);
         return writer.toByteArray();

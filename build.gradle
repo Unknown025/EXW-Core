@@ -52,7 +52,24 @@ processResources {
 
 jar {
     manifest {
-        attributes 'FMLCorePluginContainsFMLMod': 'true'
         attributes 'FMLCorePlugin': 'org.rainyville.exw.core.EXWLoadingPlugin'
     }
+}
+
+task signJar(type: SignJar, dependsOn: reobfJar) {
+    onlyIf {
+        project.hasProperty('keyStore')
+    }
+
+    keyStore = project.findProperty('keyStore')
+    alias = project.findProperty('keyStoreAlias')
+    storePass = project.findProperty('keyStorePass')
+    keyPass = project.findProperty('keyStoreKeyPass')
+
+    inputFile = new File("build/libs/${archivesBaseName}-${version}.jar")
+    outputFile = new File("build/libs/${archivesBaseName}-${version}.jar")
+}
+
+build {
+    dependsOn signJar
 }
