@@ -8,6 +8,7 @@ import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 
 import java.io.File;
+import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -47,5 +48,11 @@ public class EXWCoreDummyContainer extends DummyModContainer {
         if (getSource() == null) return null;
 
         return getSource().isDirectory() ? FMLFolderResourcePack.class : FMLFileResourcePack.class;
+    }
+
+    @Override
+    public Certificate getSigningCertificate() {
+        Certificate[] certificates = getClass().getProtectionDomain().getCodeSource().getCertificates();
+        return certificates != null ? certificates[0] : null;
     }
 }

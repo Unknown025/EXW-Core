@@ -56,7 +56,8 @@ jar {
     }
 }
 
-task signJar(type: SignJar, dependsOn: reobfJar) {
+tasks.register('signJar', SignJar) {
+    dependsOn reobfJar
     onlyIf {
         project.hasProperty('keyStore')
     }
