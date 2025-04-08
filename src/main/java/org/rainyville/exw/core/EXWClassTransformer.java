@@ -15,6 +15,7 @@ public class EXWClassTransformer implements IClassTransformer {
         EXWLoadingPlugin.LOGGER.info("Running in {} mode", OBFUSCATED ? "obfuscated" : "deobfuscated");
 
         patchers.put("net.minecraft.client.renderer.EntityRenderer", new ASMEntityRenderer());
+        patchers.put("net.minecraft.client.Minecraft", new ASMMinecraft());
     }
 
     @Override

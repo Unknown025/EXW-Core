@@ -12,12 +12,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class EXWCoreDummyContainer extends DummyModContainer {
+    public static final String VERSION = "@VERSION@";
+
     public EXWCoreDummyContainer() {
         super(new ModMetadata());
         ModMetadata meta = getMetadata();
         meta.modId = "exw_core";
         meta.name = "Expansive Weaponry Core";
-        meta.version = "@VERSION@";
+        meta.version = VERSION;
         meta.credits = "";
         meta.authorList = Arrays.asList("Unknown025", "MKVIIGTI");
         meta.description = "Provides core functionality for Expansive Weaponry.";

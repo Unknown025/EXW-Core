@@ -5,12 +5,13 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import org.rainyville.exw.core.api.ASMHelper;
+import org.rainyville.exw.core.api.IPatcher;
 import org.rainyville.exw.core.api.ObfuscationHelper;
 
 import java.util.ListIterator;
 import java.util.Objects;
 
-public class ASMEntityRenderer implements org.rainyville.exw.core.api.IPatcher {
+public class ASMEntityRenderer implements IPatcher {
     private boolean patchedOrientCamera = false;
     private boolean patchedUpdateRenderer = false;
     private static final String[] ORIENT_CAMERA = {"orientCamera", "func_78467_g", "f"};
