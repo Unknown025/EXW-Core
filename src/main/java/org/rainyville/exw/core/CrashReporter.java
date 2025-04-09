@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import net.minecraft.crash.CrashReport;
 import net.minecraftforge.fml.common.Loader;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -63,7 +64,9 @@ public class CrashReporter {
             post.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 
             HttpResponse response = client.execute(post);
-            if (response.getStatusLine().getStatusCode() != 200) {
+            // Allow for the status code to change in the future.
+            int code = response.getStatusLine().getStatusCode();
+            if (code < HttpStatus.SC_OK || code >= HttpStatus.SC_MULTIPLE_CHOICES) {
                 EXWLoadingPlugin.LOGGER.error("Could not upload crash report: {}", response.getStatusLine());
             } else {
                 EXWLoadingPlugin.LOGGER.info("Crash report submitted");
