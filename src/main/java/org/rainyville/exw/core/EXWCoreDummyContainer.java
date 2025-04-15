@@ -1,23 +1,39 @@
 package org.rainyville.exw.core;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.util.MouseFilter;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.FMLFileResourcePack;
 import net.minecraftforge.fml.client.FMLFolderResourcePack;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
+import net.minecraftforge.fml.common.event.FMLConstructionEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.Certificate;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class EXWCoreDummyContainer extends DummyModContainer {
     public static final String VERSION = "@VERSION@";
 
     private URL updateJSONUrl;
+
+    private boolean zoomMode = false;
+    private final MouseFilter mouseX;
+    private final MouseFilter mouseY;
 
     public EXWCoreDummyContainer() {
         super(new ModMetadata());
@@ -28,17 +44,31 @@ public class EXWCoreDummyContainer extends DummyModContainer {
         meta.credits = "";
         meta.authorList = Arrays.asList("Unknown025", "MKVIIGTI");
         meta.description = "Provides core functionality for Expansive Weaponry.";
-        meta.url = "https://rainyville.org/expansive-weaponry/";
+        meta.url = "https://exw.rainyville.org/";
         meta.screenshots = new String[0];
         meta.logoFile = "assets/exw/textures/logo.png";
-        meta.dependants = new ArrayList<>();
-        meta.childMods = new ArrayList<>();
+        meta.dependants = Collections.emptyList();
+        meta.childMods = Collections.emptyList();
 
         try {
             // Expose current version
             updateJSONUrl = new URL("https://rainyville.org/exwc/update.json?version=" + VERSION);
         } catch (MalformedURLException e) {
             updateJSONUrl = null;
+        }
+
+        Field mouseX = ReflectionHelper.findField(EntityRenderer.class, "mouseFilterXAxis", "field_78527_v");
+        Field mouseY = ReflectionHelper.findField(EntityRenderer.class, "mouseFilterYAxis", "field_78526_w");
+
+        mouseX.setAccessible(true);
+        mouseY.setAccessible(true);
+
+        Minecraft mc = Minecraft.getMinecraft();
+        try {
+            this.mouseX = (MouseFilter) mouseX.get(mc.entityRenderer);
+            this.mouseY = (MouseFilter) mouseY.get(mc.entityRenderer);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -70,5 +100,42 @@ public class EXWCoreDummyContainer extends DummyModContainer {
     @Override
     public URL getUpdateUrl() {
         return updateJSONUrl;
+    }
+
+    @Subscribe
+    public void modConstruction(FMLConstructionEvent event) {
+        MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @SubscribeEvent
+    public void onGetFOV(EntityViewRenderEvent.FOVModifier event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        boolean zoomActive = false;
+        float f = event.getFOV();
+
+        if (mc.currentScreen == null) {
+            if (Keyboard.KEY_LCONTROL < 0) {
+                zoomActive = Mouse.isButtonDown(Keyboard.KEY_LCONTROL + 100);
+            } else {
+                zoomActive = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL);
+            }
+        }
+
+        if (zoomActive) {
+            if (!zoomMode) {
+                zoomMode = true;
+                mc.gameSettings.smoothCamera = true;
+            }
+
+            f /= 4.0F;
+        } else if (zoomMode) {
+            zoomMode = false;
+            mc.gameSettings.smoothCamera = false;
+            mouseX.reset();
+            mouseY.reset();
+            mc.renderGlobal.setDisplayListEntitiesDirty();
+        }
+
+        event.setFOV(f);
     }
 }

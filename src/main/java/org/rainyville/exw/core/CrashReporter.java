@@ -44,7 +44,7 @@ public class CrashReporter {
                 Field field = clazz.getField("VERSION");
                 exwVer = (String) field.get(null);
             } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-                EXWLoadingPlugin.LOGGER.error("Could not get version string from Expansive Weaponry", e);
+                EXWLoadingPlugin.LOGGER.error("Could not get version string from Expansive Weaponry");
             }
         }
 
