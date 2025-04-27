@@ -17,6 +17,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,15 +54,14 @@ public class CrashReporter {
             return;
         }
 
-        CloseableHttpClient client = HttpClients.createDefault();
-        try {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpPost post = new HttpPost("https://rainyville.org/api/v2/exw/crash");
             // Set for analytical purposes.
             post.setHeader("User-Agent", String.format("Java/%s EXW/%s EXWC/%s", System.getProperty("java.version"), MoreObjects.firstNonNull(exwVer, "NA"), EXWCoreDummyContainer.VERSION));
             List<NameValuePair> params = new ArrayList<>(2);
             params.add(new BasicNameValuePair("filename", crash.getFile().getName()));
             params.add(new BasicNameValuePair("content", crash.getCompleteReport()));
-            post.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+            post.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
 
             HttpResponse response = client.execute(post);
             // Allow for the status code to change in the future.
@@ -73,12 +73,6 @@ public class CrashReporter {
             }
         } catch (IOException ex) {
             EXWLoadingPlugin.LOGGER.error("Error occurred during crash report upload", ex);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                EXWLoadingPlugin.LOGGER.error("Could not close http client", e);
-            }
         }
     }
 
