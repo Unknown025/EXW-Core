@@ -11,10 +11,14 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.Display;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +53,8 @@ public class CrashReporter {
             }
         }
 
-        if (!promptReportDialog(crash.getCompleteReport())) {
+        // If for some reason we're running in a server environment
+        if (GraphicsEnvironment.isHeadless() || !promptReportDialog(crash.getCompleteReport())) {
             EXWLoadingPlugin.LOGGER.info("User skipped reporting crash");
             return;
         }
@@ -77,6 +82,9 @@ public class CrashReporter {
     }
 
     public static boolean promptReportDialog(String content) {
+        // Necessary on Linux systems.
+        Mouse.setGrabbed(false);
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
@@ -86,7 +94,28 @@ public class CrashReporter {
 
         AtomicBoolean result = new AtomicBoolean(false);
 
-        final JDialog frame = new JDialog();
+        final JDialog overlay = new JDialog();
+        overlay.setUndecorated(true);
+        try {
+            if (Display.isFullscreen()) {
+                overlay.setBounds(0, 0, Display.getDisplayMode().getWidth(), Display.getDisplayMode().getHeight());
+            } else {
+                overlay.setBounds(Display.getX(), Display.getY(),
+                        Display.getWidth(), Display.getHeight());
+            }
+            overlay.setBackground(new Color(0, 0, 0, 1));
+            overlay.setAlwaysOnTop(true);
+            overlay.setVisible(true);
+        } catch (Throwable ignored) {
+        }
+
+        final JDialog frame = new JDialog(overlay);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                overlay.dispose();
+            }
+        });
 
         JTextArea textArea = new JTextArea();
         textArea.setText(content);
@@ -122,7 +151,7 @@ public class CrashReporter {
         frame.setAutoRequestFocus(true);
         frame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         frame.setTitle("[EXW]: Minecraft Crash Reporter");
-        frame.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
+        frame.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
